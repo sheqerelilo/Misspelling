@@ -1,0 +1,407 @@
+#include <iostream>   // For Input and Output
+#include <fstream>    // For file input and output
+#include <vector>     // Input file is stored in a vector
+#include <cassert>    // For the assert statement used to validate file open
+#include <cctype>     // Allows using the tolower() function
+#include <stdio.h>
+#include <stdlib.h>
+#include<time.h>
+#include <math.h>
+#include <istream>
+using namespace std;
+
+// Bianca Jankiewicz & Sheqere Lilo
+
+void displayMenu(){
+    cout << "Select a menu option: " << endl;
+    cout << "   1. Spell commonly misspelled words (timed)" << endl;
+    cout << "   2. Type random words from full dictionary (timed)" << endl;
+    cout << "   3. Display some words from one of the lists" << endl;
+    cout << "   4. Use binary search to lookup a word in full dictionary" << endl;
+    cout << "   5. Set word length to use with full dictionary" << endl;
+    cout << "   6. Exit the program" << endl;
+    cout << "Your choice --> ";
+
+}
+
+void displaySecondMenu(){
+    cout << "   Displaying word list entries." << endl;
+    cout << "   Which words do you want to display?" << endl;
+    cout << "      A. Dictionary of all words" << endl;
+    cout << "      B. Wrongly spelled common misspelled words" << endl;
+    cout << "      C. Correctly spelled common misspelled words" << endl;
+    cout << "   Your choice -->" << endl;
+
+}
+
+// Converts text to two different vectors for the incorrect and correct spelling.
+// Puts every other word in opposite vector using mod.
+void textToVector (vector <string> & textVector, vector <string> &correctWords,  string filename)
+{
+    // Read in dictionary into dictionary vector
+    ifstream inStream;                      // Declare an input stream for reading
+    inStream.open(filename);       // Open dictionary file
+    assert( inStream.fail() == false );     // Ensure file open worked
+
+    // If you had previously used vector dictionary, then you might want to clear it
+    // before continuing to use it, though that is not the case here.
+    textVector.clear();
+
+    // Keep repeating while input from the file yields a word
+    string newWord;// Store a single input word
+    int counter = 0;
+    while( inStream >> newWord) {           // While there is another word to be read
+        if (counter % 2 != 0){
+            correctWords.push_back(newWord);
+        } else {
+            textVector.push_back(newWord);
+        }
+        counter++;
+    }
+
+    // Close the dictionary file
+    inStream.close();
+}
+
+
+// Reads entire text file into a single vector.
+void dictTextToVector (vector <string> & textVector, string filename)
+{
+    // Read in dictionary into dictionary vector
+    ifstream inStream;                      // Declare an input stream for reading
+    inStream.open(filename);       // Open dictionary file
+    assert( inStream.fail() == false );     // Ensure file open worked
+
+    // If you had previously used vector dictionary, then you might want to clear it
+    // before continuing to use it, though that is not the case here.
+    textVector.clear();
+
+    // Keep repeating while input from the file yields a word
+    string newWord;// Store a single input word
+    while( inStream >> newWord) {           // While there is another word to be read
+        textVector.push_back(newWord);
+    }
+
+    // Close the dictionary file
+    inStream.close();
+}
+
+// Returns the value of the index or -1 if not found.
+// Splits up the vector and checks each half, and then cuts it down again using upper, lower, and mid.
+// Every time it checks a value, it will cout "comparing to".
+int binarySearch(vector<string> dictionary, string match, int size) {
+    int counter = 0, lower = 0;
+    int upper = size - 1;
+    int result;
+    while (lower <= upper) {
+        int mid = lower + (upper - lower) / 2;
+        int temp;
+        if (match == (dictionary.at(mid))) {
+            temp = 0;
+
+        } if (temp == 0) {
+            counter++;
+            cout << counter << ". Comparing to: " << dictionary.at(mid) << endl;
+            return mid;
+        } if (match > (dictionary.at(mid))) {
+            lower = mid + 1;
+        } else {
+            upper = mid - 1;
+        }
+        counter++;
+        cout << counter << ". Comparing to: " << dictionary.at(mid) << endl;
+    }
+    return -1;
+}
+
+// Checks if the value is found in binarySearch() and returns if value has been found or not.
+void outputBinarySearch(vector <string> dictionary, string &match, int size){
+   int result = binarySearch(dictionary, match, size);
+    if (result == -1){
+        cout << match << "was NOT found." << endl;
+    } else {
+        cout << match << "was found." << endl;
+    }
+}
+
+// Takes in two indices and finds the values between them given the vector.
+void printBetweenIndices(int index1, int index2, vector<string>words){
+    for (int i = 0; i < (index2 - index1) + 1; i++){
+        cout << (index1 + i) << ". " <<  words.at(index1+i) << endl;
+    }
+}
+
+// Randomly generates five words in the range of the vector's length.
+void generateRandomWords(vector<string> &incorrectWords,  vector<string> &correctWords, vector<string> &incorrectFiveWords, vector<string> &correctFiveWords){
+    for (int i = 0; i < 5; i++) {
+        int randomNum = rand() % incorrectWords.size();
+        incorrectFiveWords.push_back(incorrectWords.at(randomNum));
+        correctFiveWords.push_back(correctWords.at(randomNum));
+        cout << incorrectFiveWords.at(i) << " ";
+    }
+    cout << endl;
+}
+
+// Calculate points based off of option 1's requirements.
+void calculatePts1(vector <string> userInputVect, char option, int &elapsedSeconds, int &score, int &bestScore, int &wordLength,  vector<string> &correctWords, vector<string> &fiveWords) {
+    int bonusPoints, penaltyPoints;
+    int correctCounter = 0, incorrectCounter = 0;
+    bool noMisspelledWords = true;
+
+
+        for (int i = 0; i < 5; i++) {
+            if (userInputVect.at(i) == fiveWords.at(i)) {
+                score += 3;
+                correctCounter++;
+            } else {
+                score -= 6;
+                incorrectCounter++;
+                noMisspelledWords = false;
+            }
+        }
+
+        if (noMisspelledWords) {
+            cout << "   No misspelled words!" << endl;
+        } else {
+            cout << "   Misspelled words: " << endl;
+
+            for (int i = 0; i < 5; i++) {
+                if (userInputVect.at(i) != fiveWords.at(i)) {
+                    cout << "       " << userInputVect.at(i) << " should be: " << fiveWords.at(i) << endl;
+                }
+            }
+        }
+
+        bonusPoints = (15 - elapsedSeconds) * 2;
+        cout << "Elapsed time: " << elapsedSeconds << " seconds. " << bonusPoints
+             << " point bonus for finishing " << 15 - elapsedSeconds << " seconds early." << endl;
+
+        if (elapsedSeconds > 15) {
+            penaltyPoints = (elapsedSeconds - 15) * 2;
+            cout << "Elapsed time: " << elapsedSeconds << " seconds." << penaltyPoints
+                 << " point penalty for finishing " << elapsedSeconds - 15 << " seconds late." << endl;
+        }
+
+
+        cout << correctCounter * 3 << " points: " << correctCounter << " spelled correctly x 3 points each" << endl;
+
+        if (incorrectCounter >= 1) {
+            cout << incorrectCounter * 6 << " point penalty: " << incorrectCounter
+                 << " spelled incorrectly x 6 points each" << endl;
+        }
+
+        score += bonusPoints;
+        cout << "Score: " << score << endl;
+        if (score > bestScore) {
+            bestScore = score;
+        }
+
+}
+
+// Calculate points based off of option 2's requirements.
+void calculatePts2(vector <string> userInputVect, char option, int &elapsedSeconds, int &score, int &bestScore, int &wordLength,  vector<string> &correctWords, vector<string> &fiveWords){
+            int bonusPoints, penaltyPoints;
+            int correctCounter = 0, incorrectCounter = 0;
+            bool noMisspelledWords = true;
+            for (int i = 0; i < 5; i++) {
+                if (userInputVect.at(i) == fiveWords.at(i)) {
+                    score += (wordLength - 4);
+                    correctCounter++;
+                } else {
+                    score -= (wordLength - 4) * 2;
+                    incorrectCounter++;
+                    noMisspelledWords = false;
+                }
+            }
+
+            if (noMisspelledWords) {
+                cout << "   No misspelled words!" << endl;
+            } else {
+                cout << "   Misspelled words: " << endl;
+
+                for (int i = 0; i < 5; i++) {
+                    if (userInputVect.at(i) != fiveWords.at(i)) {
+                        cout << "       " << userInputVect.at(i) << " should be: " << fiveWords.at(i) << endl;
+                    }
+                }
+
+            }
+
+            bonusPoints = (15 - elapsedSeconds) * 2;
+            cout << "Elapsed time: " << elapsedSeconds << " seconds. " << bonusPoints
+                 << " point bonus for finishing " << 15 - elapsedSeconds << " seconds early." << endl;
+
+            if (elapsedSeconds > 15) {
+                penaltyPoints = (elapsedSeconds - 15) * 3;
+                cout << "Elapsed time: " << elapsedSeconds << " seconds." << penaltyPoints
+                     << " point penalty for finishing " << elapsedSeconds - 15 << " seconds late." << endl;
+            }
+
+            if (correctCounter >= 1) {
+                cout << correctCounter * (wordLength - 4) << " points: " << correctCounter << " spelled correctly x"
+                     << (wordLength - 4) << " points each" << endl;
+            }
+            if (incorrectCounter >= 1) {
+                cout << incorrectCounter * ((wordLength - 4) * 2) << " point penalty: " << incorrectCounter
+                     << " spelled incorrectly x " << (wordLength - 4) * 2 << " points each" << endl;
+            }
+
+            // Checks for best score, so that way score can be reset but bestScore can be saved when the user exits.
+            score += bonusPoints;
+            cout << "Score: " << score << endl;
+            wordLength++;
+            if (score > bestScore) {
+                bestScore = score;
+            }
+
+}
+
+// Using time.h, intiates the timer and reads in the user's input, returning the amount of seconds it took since the timer started and since
+// they hit enter.
+int timer (vector<string> &userInputVect){
+
+    string userInput = " ";
+    int elapsedSeconds = 0;
+
+    time_t startTime = time(NULL);
+
+    cout << "Type in those words within goal of 15 seconds: " << endl;
+
+    for (int i = 0; i < 5; i++) {
+        cin >> userInput;
+        userInputVect.push_back(userInput);
+    }
+
+    elapsedSeconds = difftime(time(NULL), startTime);
+    return elapsedSeconds;
+}
+
+//  Generates random words again, but will regenerate if the word does not match the given word length.
+void generateRandomWordsOption2(int wordLength,  vector<string> &dictionaryWords, vector<string> &fiveWords){
+    for (int i = 0; fiveWords.size() < 5; i++) {
+        int randomNum = rand() % dictionaryWords.size();
+
+        if (dictionaryWords.at(randomNum).length() == wordLength){
+            fiveWords.push_back(dictionaryWords.at(randomNum));
+        }
+    }
+    for (int i = 0; i < 5; i++) {
+        cout << fiveWords.at(i) << " ";
+    }
+    cout << endl;
+}
+
+void inputIndices(int &index1, int &index2){
+    cin >> index1;
+    cin >> index2;
+}
+
+// Outputs the words between values selected by user, each for different texts.
+void option3(string filename, int index1, int index2){
+    char secondOption;
+    filename = "dictionary.txt";
+    vector<string> dictionary, incorrectWords, correctWords;
+    dictTextToVector (dictionary, filename);
+    displaySecondMenu();
+
+    cin >> secondOption;
+
+    if (secondOption == 'A' || secondOption == 'a'){
+        cout << "  Enter the start and end indices between 0 and 263532: " << endl;
+        inputIndices(index1, index2);
+        printBetweenIndices(index1, index2, dictionary);
+
+    }
+    else if (secondOption == 'B' || secondOption == 'b'){
+        filename = "misspelledWords.txt";
+        textToVector(incorrectWords, correctWords, filename);
+        cout << "  Enter the start and end indices between 0 and 113: " << endl;
+        inputIndices(index1, index2);
+
+
+        printBetweenIndices(index1, index2, incorrectWords);
+
+    } else if (secondOption == 'C' || secondOption == 'c'){
+        filename = "misspelledWords.txt";
+        textToVector(incorrectWords, correctWords, filename);
+
+        cout << "  Enter the start and end indices between 0 and 113: " << endl;
+
+        inputIndices(index1, index2);
+
+        printBetweenIndices(index1, index2, correctWords);
+    }
+}
+
+int main() {
+    cout << "There are 263533 words in the full dictionary." << endl << "There are 114 commonly misspelled words." << endl;
+    displayMenu();
+    srand(1);
+    int index1, index2, option;
+    string filename;
+
+    cin >> option;
+    int score, bestScore = 0;
+    int wordLength = 5;
+    while (option != 6) {
+
+        // Always check if word length is changed first, so that way it can be applied to the next selection of 2.
+        if (option == 5){
+            cout << "Enter new wordLength: " << endl;
+            cin >> wordLength;
+        }
+
+        if (option == 1) {
+            cout << "Using commonly misspelled words" << endl;
+            vector<string> incorrectWords, correctWords, userInputVect, incorrectFiveWords, correctFiveWords;
+            filename = "misspelledWords.txt";
+            // Puts incorrectWords and correctWords into separate vectors to compare to later.
+            textToVector(incorrectWords, correctWords, filename);
+            score = 0;
+            generateRandomWords(incorrectWords, correctWords, incorrectFiveWords, correctFiveWords);
+            // Words are output by generateRandomWords, which the user can then enter correctly when the timer() function is
+            // prompted. The points are calculated at calculatePts1, where each word entered by the user is compared to the correctWords vector,
+            // since it holds the same word location as incorrectWords. Points are then generated based on the guidelines of option 1.
+            int elapsedSeconds = timer(userInputVect);
+            calculatePts1(userInputVect, option, elapsedSeconds, score, bestScore, wordLength,  correctWords, correctFiveWords);
+
+            }
+
+        else if (option == 2){
+            cout << "Using full dictionary" << endl;
+            score = 0;
+            filename = "dictionary.txt";
+            vector <string> dictionaryWords, userInputVect, fiveWords;
+            // Reads entire dictionary into a single vector.
+            dictTextToVector(dictionaryWords, filename);
+            // Generates random words based on the given word length. These are checked with an if statement and regenerated as stated above.
+            generateRandomWordsOption2(wordLength, dictionaryWords, fiveWords);
+            int elapsedSeconds = timer(userInputVect);
+            // User inputs again, input is compared this time to only the dictionary vector which is the correct spelling, then points are generated based on guidelines,
+            // for completion time and correctly/incorrectly spelled words.
+            calculatePts2(userInputVect, option, elapsedSeconds, score, bestScore, wordLength,  dictionaryWords, fiveWords) ;
+
+        }
+        // Reads in if the user selects one of the three options and generates words in the selected indices based on the text file selection.
+        else if (option == 3) {
+            option3(filename, index1, index2);
+        }
+        // Reads dictionary.txt into single vector, takes in match value for the user to search a term in the dictionary.
+        // Using binarySearch, each compared value is output as the vector is searched in halves.
+        else if (option == 4){
+            filename = "dictionary.txt";
+            vector <string> dictionary;
+            dictTextToVector(dictionary, filename);
+            cout << "Enter the word to lookup: " << endl;
+            string match;
+            cin >> match;
+            // Uses original binarySearch() function to check if a value was found or not, then outputs the result.
+            outputBinarySearch(dictionary, match, dictionary.size());
+        }
+        // Redisplay the menu & selection until 6 is selected to exit.
+        displayMenu();
+        cin >> option;
+    }
+    cout << "Exiting program" << endl  << "Best score was " << bestScore;
+
+}
